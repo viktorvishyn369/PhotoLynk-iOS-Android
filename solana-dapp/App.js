@@ -1,6 +1,6 @@
 import 'react-native-get-random-values';
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, Alert, ScrollView, ActivityIndicator, Platform, Pressable, Button, Dimensions, SafeAreaView, KeyboardAvoidingView } from 'react-native';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, Alert, ScrollView, ActivityIndicator, Platform, Pressable, Button, Dimensions, SafeAreaView, KeyboardAvoidingView, Linking } from 'react-native';
 import * as MediaLibrary from 'expo-media-library';
 import * as FileSystem from 'expo-file-system/legacy'; // Fixed: Use legacy import for downloadAsync support
 import * as SecureStore from 'expo-secure-store';
@@ -27,6 +27,7 @@ export default function App() {
   const [serverType, setServerType] = useState('local'); // 'local' or 'remote'
   const [remoteIp, setRemoteIp] = useState('');
   const [token, setToken] = useState(null);
+  const [userId, setUserId] = useState(null);
   const [status, setStatus] = useState('Idle');
   const [progress, setProgress] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -71,8 +72,10 @@ export default function App() {
     if (savedRemoteIp) setRemoteIp(savedRemoteIp);
     
     const storedToken = await SecureStore.getItemAsync('auth_token');
+    const storedUserId = await SecureStore.getItemAsync('user_id');
     if (storedToken) {
       setToken(storedToken);
+      if (storedUserId) setUserId(parseInt(storedUserId));
       setView('home');
     } else {
       setView('auth');
@@ -105,8 +108,12 @@ export default function App() {
       console.log('Auth response:', res.status);
 
       if (type === 'login') {
-        const { token } = res.data;
+        const { token, userId } = res.data;
         await SecureStore.setItemAsync('auth_token', token);
+        if (userId) {
+          await SecureStore.setItemAsync('user_id', String(userId));
+          setUserId(userId);
+        }
         setToken(token);
         setView('home');
       } else {
@@ -616,7 +623,9 @@ export default function App() {
               {'\n\n'}
               📁 <Text style={styles.boldText}>Uploaded Files Location:</Text>
               {'\n'}
-              Your synced photos are stored in the <Text style={styles.boldText}>uploads/</Text> folder on your server (relative to where you installed it).
+              Your synced photos are stored in:{'\n'}
+              <Text style={styles.boldText}>server/uploads/{userId || '[user_id]'}/</Text>{'\n'}
+              {userId ? `Your User ID: ${userId}` : '(Login to see your user ID)'}
             </Text>
           </View>
           
@@ -629,20 +638,10 @@ export default function App() {
               onPress={() => {
                 // Open GitHub repository
                 const githubUrl = 'https://github.com/viktorvishyn369/PhotoSync';
-                Alert.alert(
-                  'Open Source Project',
-                  'PhotoSync is open source!\n\nGitHub: ' + githubUrl + '\n\nDownload the server app and view the source code.',
-                  [
-                    { text: 'Cancel', style: 'cancel' },
-                    { 
-                      text: 'Open GitHub', 
-                      onPress: () => {
-                        // In a real app, use Linking.openURL(githubUrl)
-                        console.log('Opening:', githubUrl);
-                      }
-                    }
-                  ]
-                );
+                Linking.openURL(githubUrl).catch(err => {
+                  Alert.alert('Error', 'Could not open GitHub link');
+                  console.error('Failed to open URL:', err);
+                });
               }}>
               <Text style={styles.resourceIcon}>📦</Text>
               <View style={styles.resourceContent}>
