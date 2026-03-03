@@ -6668,7 +6668,7 @@ app.post('/solana-rpc', async (req, res) => {
         'https://solana-rpc.publicnode.com',       // PublicNode - reliable free tier
         'https://rpc.ankr.com/solana',
         'https://solana.drpc.org',                 // dRPC public
-        'https://mainnet.helius-rpc.com/?api-key=***REMOVED***', // Helius free
+        process.env.HELIUS_API_KEY ? `https://mainnet.helius-rpc.com/?api-key=${process.env.HELIUS_API_KEY}` : null, // Helius (env)
         'https://solana-mainnet.g.alchemy.com/v2/demo'
     ].filter(Boolean);
     
