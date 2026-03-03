@@ -4845,7 +4845,8 @@ app.get('/api/status/uptime/state', (_req, res) => {
 // Admin: view raw uptime state for debugging (no modification)
 app.get('/api/status/uptime/debug', (req, res) => {
     const secret = req.query.secret;
-    if (secret !== 'photolynk2026') {
+    const DEBUG_SECRET = process.env.DEBUG_SECRET || '';
+    if (!DEBUG_SECRET || secret !== DEBUG_SECRET) {
         return res.status(403).json({ ok: false, error: 'Forbidden' });
     }
     res.setHeader('Cache-Control', 'no-store');
@@ -7604,8 +7605,7 @@ app.get('/nft-payment', (req, res) => {
           const metaUrl = qs.get('metadataUrl') || '';
           
           const dasKeys = [
-            'https://mainnet.helius-rpc.com/?api-key=***REMOVED***',
-            'https://mainnet.helius-rpc.com/?api-key=***REMOVED***',
+            'https://api.mainnet-beta.solana.com',
           ];
           for (let dasAttempt = 0; dasAttempt < 5; dasAttempt++) {
             await new Promise(r => setTimeout(r, dasAttempt === 0 ? 2000 : 3000));
