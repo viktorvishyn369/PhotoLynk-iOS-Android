@@ -4,6 +4,9 @@ on:
   push:
     tags:
       - 'v*'
+    paths:
+      - 'server-tray/**'
+      - 'server/**'
   workflow_dispatch:
 
 jobs:
@@ -313,3 +316,4 @@ jobs:
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
